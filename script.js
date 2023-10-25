@@ -36,6 +36,7 @@ const displayController = (function () {
 const gameController = (function () {
   let currentPlayer = createPlayer('X');
   let nexPlayer = createPlayer('O');
+  let turnCounter = 0;
 
   const startGame = () => {
     displayController.displayBoard();
@@ -90,6 +91,15 @@ const gameController = (function () {
     }
   };
 
+  const checkForTie = () => {
+    turnCounter += 1;
+    if (turnCounter >= 8)  {
+      return true;
+    } else {
+      return false;
+    }
+  };
+
   const update = () => {
     for (let i = 0; i < 9; i++) {
       const gridCell = document.querySelector(`[data-index="${i}"]`); 
@@ -107,6 +117,7 @@ const gameController = (function () {
   checkForColumns,
   checkForDiagonals,
   checkForWinner,
+  checkForTie,
   update};
 })();
 

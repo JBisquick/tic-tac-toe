@@ -43,6 +43,53 @@ const gameController = (function () {
 
   const getCurrentPlayer = () => currentPlayer;
 
+  const checkForRows = () => {
+    const board = gameBoard.getBoard();
+    for (i = 0; i < 7; i += 3) {
+      let row = [];
+      for (j = i; j < i+3; j++) {
+        row.push(board[j]);
+      }
+      if (row.every(cell => cell =='X') || row.every(cell => cell == 'O')) {
+        return true;
+      }
+    } 
+    return false;
+  };
+
+  const checkForColumns = () => {
+    const board = gameBoard.getBoard();
+    for (i = 0; i < 3; i ++) {
+      let column = [];
+      for (j = i; j < i+7; j+=3) {
+        column.push(board[j]);
+      }
+      if (column.every(cell => cell =='X') || column.every(cell => cell == 'O')) {
+        return true;
+      }
+    } 
+    return false;
+  };
+
+  const checkForDiagonals = () => {
+    const board = gameBoard.getBoard();
+    const diagonal = [[board[0], board[4], board[8] ],[board[2], board[4], board[6]]];
+    if ((diagonal[0].every(cell => cell == 'X') || diagonal[0].every(cell => cell == 'O'))
+      || (diagonal[1].every(cell => cell == 'X') || diagonal[1].every(cell => cell == 'O'))) {
+      return true;
+    } else {
+      return false;
+    }
+  };
+
+  const checkForWinner = () => {
+    if (checkForDiagonals() || checkForColumns() || checkForRows()) {
+      return true
+    } else {
+      return false;
+    }
+  };
+
   const update = () => {
     for (let i = 0; i < 9; i++) {
       const gridCell = document.querySelector(`[data-index="${i}"]`); 
@@ -50,13 +97,16 @@ const gameController = (function () {
     }
 
     [currentPlayer, nexPlayer] = [nexPlayer, currentPlayer];
-
     displayController.displayBoard();
   };
 
   return {
   startGame,
   getCurrentPlayer,
+  checkForRows,
+  checkForColumns,
+  checkForDiagonals,
+  checkForWinner,
   update};
 })();
 

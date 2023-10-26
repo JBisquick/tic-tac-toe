@@ -17,6 +17,8 @@ const gameBoard = (function () {
 
 
 const displayController = (function () {
+  const gameContainer = document.querySelector('.game-container');
+
   const displayBoard = () => {
     for (let i = 0; i < 9; i++) {
       const gridCell = document.querySelector(`[data-index="${i}"]`); 
@@ -28,14 +30,45 @@ const displayController = (function () {
     }
   };
 
+  const stopRound = () => {
+    for (let i = 0; i < 9; i++) {
+      const gridCell = document.querySelector(`[data-index="${i}"]`); 
+      gridCell.removeEventListener('click', gameBoard.addMark);
+    }
+  };
+
+  const displayWinText = () => {
+    const winText = document.createElement('div');
+    winText.textContent = `The Winner is ${gameController.getCurrentPlayer().getSpecies()}!`;
+    gameContainer.appendChild(winText);
+  };
+
+  const displayTieText = () => {
+    const tieText = document.createElement('div');
+    tieText.textContent = `It is a Draw`;
+    gameContainer.appendChild(tieText);
+  };
+
+  const displayPlayButton = () => {
+    const playButton = document.createElement('button');
+    playButton.textContent = 'Play Again';
+    playButton.classList.add('settings-button');
+    gameContainer.appendChild(playButton);
+  };
+
   return {
-    displayBoard};
+    displayBoard,
+    stopRound,
+    displayWinText,
+    displayTieText,
+    displayPlayButton
+  };
 })();
 
 
 const gameController = (function () {
-  let currentPlayer = createPlayer('X');
-  let nexPlayer = createPlayer('O');
+  let currentPlayer = createPlayer('X', 'Rat');
+  let nexPlayer = createPlayer('O', 'Cat');
   let turnCounter = 0;
 
   const startGame = () => {
@@ -93,7 +126,7 @@ const gameController = (function () {
 
   const checkForTie = () => {
     turnCounter += 1;
-    if (turnCounter >= 8)  {
+    if (turnCounter >= 9)  {
       return true;
     } else {
       return false;
@@ -101,13 +134,20 @@ const gameController = (function () {
   };
 
   const update = () => {
-    for (let i = 0; i < 9; i++) {
-      const gridCell = document.querySelector(`[data-index="${i}"]`); 
-      gridCell.removeEventListener('click', gameBoard.addMark);
-    }
-
-    [currentPlayer, nexPlayer] = [nexPlayer, currentPlayer];
+    displayController.stopRound();
     displayController.displayBoard();
+
+    if (checkForWinner() === true) {
+      displayController.displayWinText();
+      displayController.displayPlayButton();
+      displayController.stopRound();
+    }
+    if (checkForTie() === true) {
+      displayController.displayTieText();
+      displayController.displayPlayButton();
+      displayController.stopRound();
+    }
+    [currentPlayer, nexPlayer] = [nexPlayer, currentPlayer];
   };
 
   return {
@@ -118,15 +158,40 @@ const gameController = (function () {
   checkForDiagonals,
   checkForWinner,
   checkForTie,
-  update};
+  update
+  };
+})();
+
+const gameSettings = (function() {
+  const starContainer = document.querySelector('.start-container');
+  const startButton = document.querySelector('.start');
+
+  const hideSettings = () => {
+    starContainer.classList.remove('show');
+    gameController.startGame();
+  };
+
+  const setButtons = () => {
+    startButton.addEventListener('click', function() {
+      hideSettings();
+    });
+  };
+
+  return {
+    hideSettings,
+    setButtons
+  };
 })();
 
 
-function createPlayer(mark) {
+function createPlayer(mark, species) {
   const getMark = () => mark; 
+  const getSpecies = () => species;
 
   return {
-    getMark}
+    getMark,
+    getSpecies
+  };
 };
 
- gameController.startGame();
+ gameSettings.setButtons();

@@ -29,6 +29,7 @@ button {
   align-items: center;
   justify-content: space-between;
   position: fixed;
+  padding-bottom: 5vh;
   width: 100vw;
   height: 95vh;
   top: 0;

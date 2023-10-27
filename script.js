@@ -10,14 +10,27 @@ const gameBoard = (function () {
 
   };
 
+  const resetBoard = () => {
+    board =  new Array(9).fill('');
+  };
+
   return {
     getBoard,
-    addMark};
+    addMark,
+    resetBoard
+  };
 })();
 
 
 const displayController = (function () {
   const gameContainer = document.querySelector('.game-container');
+  const playButton = document.createElement('button');
+  const winText = document.createElement('div');
+  const tieText = document.createElement('div');
+
+  playButton.textContent = 'Play Again';
+  playButton.classList.add('settings-button');
+  tieText.textContent = `It is a Draw`;
 
   const displayBoard = () => {
     for (let i = 0; i < 9; i++) {
@@ -38,30 +51,43 @@ const displayController = (function () {
   };
 
   const displayWinText = () => {
-    const winText = document.createElement('div');
     winText.textContent = `The Winner is ${gameController.getCurrentPlayer().getSpecies()}!`;
     gameContainer.appendChild(winText);
   };
 
   const displayTieText = () => {
-    const tieText = document.createElement('div');
-    tieText.textContent = `It is a Draw`;
     gameContainer.appendChild(tieText);
   };
 
   const displayPlayButton = () => {
-    const playButton = document.createElement('button');
-    playButton.textContent = 'Play Again';
-    playButton.classList.add('settings-button');
     gameContainer.appendChild(playButton);
   };
+
+  const restartDisplay = () => {
+    if (gameController.checkForWinner() === true) {
+      gameContainer.removeChild(winText);
+      winText.textContent = '';
+    }
+    if (gameController.checkForTie() === true) {
+      gameContainer.removeChild(tieText);
+    }
+    gameContainer.removeChild(playButton);
+
+    gameBoard.resetBoard();
+    displayBoard();
+    gameController.restartGame();
+    gameSettings.showSettings();
+  };
+
+  playButton.addEventListener('click', restartDisplay);
 
   return {
     displayBoard,
     stopRound,
     displayWinText,
     displayTieText,
-    displayPlayButton
+    displayPlayButton,
+    restartDisplay
   };
 })();
 
@@ -126,7 +152,7 @@ const gameController = (function () {
 
   const checkForTie = () => {
     turnCounter += 1;
-    if (turnCounter >= 9)  {
+    if (turnCounter >= 9 && checkForWinner() === false)  {
       return true;
     } else {
       return false;
@@ -150,6 +176,10 @@ const gameController = (function () {
     [currentPlayer, nexPlayer] = [nexPlayer, currentPlayer];
   };
 
+  const restartGame = () => {
+    turnCounter = 0;
+  };
+
   return {
   startGame,
   getCurrentPlayer,
@@ -158,7 +188,8 @@ const gameController = (function () {
   checkForDiagonals,
   checkForWinner,
   checkForTie,
-  update
+  update,
+  restartGame
   };
 })();
 
@@ -171,6 +202,10 @@ const gameSettings = (function() {
     gameController.startGame();
   };
 
+  const showSettings = () => {
+    starContainer.classList.add('show');
+  };
+
   const setButtons = () => {
     startButton.addEventListener('click', function() {
       hideSettings();
@@ -179,6 +214,7 @@ const gameSettings = (function() {
 
   return {
     hideSettings,
+    showSettings,
     setButtons
   };
 })();

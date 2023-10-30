@@ -7,17 +7,29 @@ const gameBoard = (function () {
     board[e.target.getAttribute('data-index')] = gameController.getCurrentPlayer().getMark();
     e.target.textContent = board[e.target.getAttribute('data-index')]
     gameController.update();
-
   };
 
   const resetBoard = () => {
     board =  new Array(9).fill('');
   };
 
+  const getEmptyBoardIndex = () => {
+    let indexBoard = [];
+    let i = 0;
+    for (const position of board) {
+      if (position === '') {
+        indexBoard.push(i);
+      }
+      i += 1;
+    }
+    return indexBoard;
+  };
+
   return {
     getBoard,
     addMark,
-    resetBoard
+    resetBoard,
+    getEmptyBoardIndex
   };
 })();
 
@@ -160,6 +172,10 @@ const gameController = (function () {
   };
 
   const update = () => {
+    if (gameSettings.getMode() === 'cpu') {
+      minimaxCPU.makeMove();
+    }
+    
     displayController.stopRound();
     displayController.displayBoard();
 
@@ -173,7 +189,10 @@ const gameController = (function () {
       displayController.displayPlayButton();
       displayController.stopRound();
     }
+
+    if (gameSettings.getMode() === 'player') {
     [currentPlayer, nexPlayer] = [nexPlayer, currentPlayer];
+    }
   };
 
   const restartGame = () => {
@@ -196,6 +215,8 @@ const gameController = (function () {
 const gameSettings = (function() {
   const starContainer = document.querySelector('.start-container');
   const startButton = document.querySelector('.start');
+  const modeButton = document.querySelector('.mode');
+  let mode = 'player';
 
   const hideSettings = () => {
     starContainer.classList.remove('show');
@@ -206,16 +227,42 @@ const gameSettings = (function() {
     starContainer.classList.add('show');
   };
 
+  const changeMode = () => {
+    if (mode === 'player') {
+      mode = 'cpu';
+      modeButton.textContent = 'Player vs CPU';
+    } else {
+      mode = 'player';
+      modeButton.textContent = 'Player vs Player'
+    }
+  };
+
+  const getMode = () => mode;
+
   const setButtons = () => {
-    startButton.addEventListener('click', function() {
-      hideSettings();
-    });
+    startButton.addEventListener('click', hideSettings);
+    modeButton.addEventListener('click', changeMode);
   };
 
   return {
     hideSettings,
     showSettings,
+    changeMode,
+    getMode,
     setButtons
+  };
+})();
+
+const minimaxCPU = (function() {
+
+  const makeMove = () => {
+    randomMove = Math.floor(Math.random() * gameBoard.getEmptyBoardIndex().length);
+    finalMove = gameBoard.getEmptyBoardIndex()[randomMove];
+    gameBoard.getBoard()[finalMove] = 'O';
+  };
+  
+  return {
+    makeMove
   };
 })();
 

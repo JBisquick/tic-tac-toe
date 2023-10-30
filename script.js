@@ -76,11 +76,11 @@ const displayController = (function () {
   };
 
   const restartDisplay = () => {
-    if (gameController.checkForWinner() === true) {
+    if (gameController.checkForWin(gameBoard.getBoard()) === true) {
       gameContainer.removeChild(winText);
       winText.textContent = '';
     }
-    if (gameController.checkForTie() === true) {
+    if (gameController.checkForTie(gameBoard.getBoard()) === true) {
       gameContainer.removeChild(tieText);
     }
     gameContainer.removeChild(playButton);
@@ -106,6 +106,8 @@ const displayController = (function () {
 
 const gameController = (function () {
   let currentPlayer = createPlayer('X', 'Rat');
+  // nextPlayer represents AI in singleplayer
+  // currentPlayer/nextPlayer can change values from other functions4
   let nextPlayer = createPlayer('O', 'Cat');
   let turnCounter = 0;
 
@@ -131,8 +133,7 @@ const gameController = (function () {
 
   const getAiPlayer = () => nextPlayer;
 
-  const checkForRows = () => {
-    const board = gameBoard.getBoard();
+  const checkForRows = (board) => {
     for (i = 0; i < 7; i += 3) {
       let row = [];
       for (j = i; j < i+3; j++) {
@@ -145,8 +146,7 @@ const gameController = (function () {
     return false;
   };
 
-  const checkForColumns = () => {
-    const board = gameBoard.getBoard();
+  const checkForColumns = (board) => {
     for (i = 0; i < 3; i ++) {
       let column = [];
       for (j = i; j < i+7; j+=3) {
@@ -159,8 +159,7 @@ const gameController = (function () {
     return false;
   };
 
-  const checkForDiagonals = () => {
-    const board = gameBoard.getBoard();
+  const checkForDiagonals = (board) => {
     const diagonal = [[board[0], board[4], board[8] ],[board[2], board[4], board[6]]];
     if ((diagonal[0].every(cell => cell == 'X') || diagonal[0].every(cell => cell == 'O'))
       || (diagonal[1].every(cell => cell == 'X') || diagonal[1].every(cell => cell == 'O'))) {
@@ -170,17 +169,17 @@ const gameController = (function () {
     }
   };
 
-  const checkForWinner = () => {
-    if (checkForDiagonals() || checkForColumns() || checkForRows()) {
+  const checkForWin = (board) => {
+    if (checkForDiagonals(board) || checkForColumns(board) || checkForRows(board)) {
       return true
     } else {
       return false;
     }
   };
 
-  const checkForTie = () => {
+  const checkForTie = (board) => {
     turnCounter += 1;
-    if (turnCounter >= 9 && checkForWinner() === false)  {
+    if (turnCounter >= 9 && checkForWin(board) === false)  {
       return true;
     } else {
       return false;
@@ -188,27 +187,28 @@ const gameController = (function () {
   };
 
   const update = () => {
-    if (gameSettings.getMode() === 'cpu') {
+    if (gameSettings.getMode() === 'ai' &&  checkForWin(gameBoard.getBoard()) === false) {
       minimaxAI.makeRandomMove();
+      turnCounter += 1;
+      [currentPlayer, nextPlayer] = [nextPlayer, currentPlayer];
     }
     
     displayController.stopRound();
     displayController.displayBoard();
 
-    if (checkForWinner() === true) {
+    if (checkForWin(gameBoard.getBoard()) === true) {
       displayController.displayWinText();
       displayController.displayPlayButton();
       displayController.stopRound();
     }
-    if (checkForTie() === true) {
+    if (checkForTie(gameBoard.getBoard()) === true) {
       displayController.displayTieText();
       displayController.displayPlayButton();
       displayController.stopRound();
     }
 
-    if (gameSettings.getMode() === 'player') {
     [currentPlayer, nextPlayer] = [nextPlayer, currentPlayer];
-    }
+
   };
 
   const restartGame = () => {
@@ -225,7 +225,7 @@ const gameController = (function () {
   checkForRows,
   checkForColumns,
   checkForDiagonals,
-  checkForWinner,
+  checkForWin,
   checkForTie,
   update,
   restartGame
@@ -267,8 +267,8 @@ const gameSettings = (function() {
 
   const changeMode = () => {
     if (mode === 'player') {
-      mode = 'cpu';
-      modeButton.textContent = 'Player vs CPU';
+      mode = 'ai';
+      modeButton.textContent = 'Player vs AI';
       rat.classList.add('glow');
       rat.addEventListener('click', chooseAnimal);
       cat.addEventListener('click', chooseAnimal);
@@ -307,9 +307,22 @@ const minimaxAI = (function() {
     finalMove = gameBoard.getEmptyBoardIndex()[randomMove];
     gameBoard.getBoard()[finalMove] = gameController.getAiPlayer().getMark();
   };
+
+  const getScore = (game, depth, player) => { 
+    if (gameController.checkForWin(game) && 
+    (gameController.getAiPlayer.getSpecies() === player.getSpecies())) {
+      return 10 - depth;
+    } else if (gameController.checkForWin(game) && 
+    (gameController.getCurrentPlayer.getSpecies() === player.getSpecies())) {
+      return depth - 10;
+    } else {
+      return 0;
+    }
+  };
   
   return {
-    makeRandomMove
+    makeRandomMove,
+    getScore
   };
 })();
 

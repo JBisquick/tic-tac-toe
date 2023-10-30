@@ -106,14 +106,30 @@ const displayController = (function () {
 
 const gameController = (function () {
   let currentPlayer = createPlayer('X', 'Rat');
-  let nexPlayer = createPlayer('O', 'Cat');
+  let nextPlayer = createPlayer('O', 'Cat');
   let turnCounter = 0;
 
   const startGame = () => {
+    if (getCurrentPlayer().getSpecies() === 'Cat') {
+      minimaxAI.makeRandomMove();
+      turnCounter += 1;
+    }
     displayController.displayBoard();
   };
 
+  const makePlayerRat = () => {
+    currentPlayer = createPlayer('X', 'Rat');
+    nextPlayer = createPlayer('O', 'Cat');
+  };
+
+  const makePlayerCat = () => {
+    currentPlayer = createPlayer('O', 'Cat');
+    nextPlayer = createPlayer('X', 'Rat');
+  };
+
   const getCurrentPlayer = () => currentPlayer;
+
+  const getAiPlayer = () => nextPlayer;
 
   const checkForRows = () => {
     const board = gameBoard.getBoard();
@@ -173,7 +189,7 @@ const gameController = (function () {
 
   const update = () => {
     if (gameSettings.getMode() === 'cpu') {
-      minimaxCPU.makeMove();
+      minimaxAI.makeRandomMove();
     }
     
     displayController.stopRound();
@@ -191,17 +207,21 @@ const gameController = (function () {
     }
 
     if (gameSettings.getMode() === 'player') {
-    [currentPlayer, nexPlayer] = [nexPlayer, currentPlayer];
+    [currentPlayer, nextPlayer] = [nextPlayer, currentPlayer];
     }
   };
 
   const restartGame = () => {
     turnCounter = 0;
+    makePlayerRat();
   };
 
   return {
   startGame,
+  makePlayerRat,
+  makePlayerCat,
   getCurrentPlayer,
+  getAiPlayer,
   checkForRows,
   checkForColumns,
   checkForDiagonals,
@@ -216,6 +236,8 @@ const gameSettings = (function() {
   const starContainer = document.querySelector('.start-container');
   const startButton = document.querySelector('.start');
   const modeButton = document.querySelector('.mode');
+  const rat = document.querySelector('#rat');
+  const cat = document.querySelector('#cat');
   let mode = 'player';
 
   const hideSettings = () => {
@@ -227,13 +249,37 @@ const gameSettings = (function() {
     starContainer.classList.add('show');
   };
 
+  const chooseAnimal = function(e) {
+    if (e.target.class === 'glow') {
+      return;
+    }
+
+    if (e.target.id === 'cat') {
+      gameController.makePlayerCat();
+      e.target.classList.add('glow');
+      rat.classList.remove('glow');
+    } else {
+      gameController.makePlayerRat();
+      e.target.classList.add('glow');
+      cat.classList.remove('glow');
+    }
+  };
+
   const changeMode = () => {
     if (mode === 'player') {
       mode = 'cpu';
       modeButton.textContent = 'Player vs CPU';
+      rat.classList.add('glow');
+      rat.addEventListener('click', chooseAnimal);
+      cat.addEventListener('click', chooseAnimal);
     } else {
       mode = 'player';
-      modeButton.textContent = 'Player vs Player'
+      modeButton.textContent = 'Player vs Player';
+      gameController.makePlayerRat();
+      rat.classList.remove('glow');
+      cat.classList.remove('glow');
+      rat.removeEventListener('click', chooseAnimal);
+      cat.removeEventListener('click', chooseAnimal);
     }
   };
 
@@ -247,22 +293,23 @@ const gameSettings = (function() {
   return {
     hideSettings,
     showSettings,
+    chooseAnimal,
     changeMode,
     getMode,
     setButtons
   };
 })();
 
-const minimaxCPU = (function() {
+const minimaxAI = (function() {
 
-  const makeMove = () => {
+  const makeRandomMove = () => {
     randomMove = Math.floor(Math.random() * gameBoard.getEmptyBoardIndex().length);
     finalMove = gameBoard.getEmptyBoardIndex()[randomMove];
-    gameBoard.getBoard()[finalMove] = 'O';
+    gameBoard.getBoard()[finalMove] = gameController.getAiPlayer().getMark();
   };
   
   return {
-    makeMove
+    makeRandomMove
   };
 })();
 

@@ -67,6 +67,7 @@ button {
 .start-container img {
   width: 240px;
   height: 240px;
+  cursor: pointer;
   border: 1px solid var(--black);
 }
 
@@ -112,4 +113,8 @@ button {
   font-size: 1.5rem;
   height: 2.5rem;
   padding: 0 20px;
+}
+
+.glow {
+  box-shadow: 0 0 50px 15px #ffff00;
 }

@@ -119,6 +119,7 @@ const gameController = (function () {
   const startGame = () => {
     if (getCurrentPlayer().getSpecies() === 'Cat') {
       minimaxAI.makeRandomMove();
+      gameBoard.getBoard()[minimaxAI.getMove] = gameController.getAiPlayer().getMark();
     }
     displayController.displayBoard();
   };
@@ -193,8 +194,8 @@ const gameController = (function () {
 
   const update = () => {
     if (gameSettings.getMode() === 'ai' &&  checkForWin(gameBoard.getBoard()) === false) {
-      minimaxAI.minimax(gameBoard.getBoard(), 0, gameController.getAiPlayer());
-      gameBoard.getBoard()[minimaxAI.getBestMove()] = gameController.getAiPlayer().getMark();
+      minimaxAI.makeAiMove(gameBoard.getBoard(), 0, gameController.getAiPlayer());
+      gameBoard.getBoard()[minimaxAI.getMove()] = gameController.getAiPlayer().getMark();
       [currentPlayer, nextPlayer] = [nextPlayer, currentPlayer];
     }
     
@@ -241,9 +242,11 @@ const gameSettings = (function() {
   const starContainer = document.querySelector('.start-container');
   const startButton = document.querySelector('.start');
   const modeButton = document.querySelector('.mode');
+  const diffButton = document.querySelector('.diff');
   const rat = document.querySelector('#rat');
   const cat = document.querySelector('#cat');
   let mode = 'player';
+  let difficulty = 25;
 
   const hideSettings = () => {
     starContainer.classList.remove('show');
@@ -290,9 +293,33 @@ const gameSettings = (function() {
 
   const getMode = () => mode;
 
+  const changeDifficulty = () => {
+    switch(difficulty) {
+      case 25:
+        difficulty = 50;
+        diffButton.textContent = 'Medium';
+        break;
+      case 50:
+        difficulty = 75;
+        diffButton.textContent = 'Hard';
+        break;
+      case 75:
+        difficulty = 100;
+        diffButton.textContent = 'Unbeatable';
+        break;
+      case 100:
+        difficulty = 25;
+        diffButton.textContent = 'Easy';
+        break;
+    }
+  };
+
+  const getDifficulty = () => difficulty;
+
   const setButtons = () => {
     startButton.addEventListener('click', hideSettings);
     modeButton.addEventListener('click', changeMode);
+    diffButton.addEventListener('click', changeDifficulty);
   };
 
   return {
@@ -301,6 +328,8 @@ const gameSettings = (function() {
     chooseAnimal,
     changeMode,
     getMode,
+    changeDifficulty,
+    getDifficulty,
     setButtons
   };
 })();
@@ -311,7 +340,7 @@ const minimaxAI = (function() {
   const makeRandomMove = () => {
     randomMove = Math.floor(Math.random() * gameBoard.getEmptyBoardIndex().length);
     finalMove = gameBoard.getEmptyBoardIndex()[randomMove];
-    gameBoard.getBoard()[finalMove] = gameController.getAiPlayer().getMark();
+    choice = finalMove;
   };
 
   const getScore = (game, depth, player) => { 
@@ -388,7 +417,17 @@ const minimaxAI = (function() {
     return findBestMove(moves, scores, player);
   };
 
-  const getBestMove = () => choice;
+  const getMove = () => choice;
+
+  const makeAiMove = (game, depth, player) => {
+    randomNumber = Math.floor(Math.random() * 100);
+    if (gameSettings.getDifficulty() > randomNumber) {
+      console.log('yes')
+      minimax(gameBoard.getBoard(), 0, gameController.getAiPlayer());
+    } else {
+      makeRandomMove();
+    }
+  };
   
   return {
     makeRandomMove,
@@ -397,7 +436,8 @@ const minimaxAI = (function() {
     findMinScoreIndex,
     findBestMove,
     minimax,
-    getBestMove
+    getMove,
+    makeAiMove
     };
 })();
 

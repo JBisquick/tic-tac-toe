@@ -25,11 +25,17 @@ const gameBoard = (function () {
     return indexBoard;
   };
 
+  const getNewBoard = (aiBoard, move, mark) => {
+    aiBoard[move] = mark;
+    return aiBoard;
+  };
+
   return {
     getBoard,
     addMark,
     resetBoard,
-    getEmptyBoardIndex
+    getEmptyBoardIndex,
+    getNewBoard
   };
 })();
 
@@ -109,12 +115,10 @@ const gameController = (function () {
   // nextPlayer represents AI in singleplayer
   // currentPlayer/nextPlayer can change values from other functions4
   let nextPlayer = createPlayer('O', 'Cat');
-  let turnCounter = 0;
 
   const startGame = () => {
     if (getCurrentPlayer().getSpecies() === 'Cat') {
       minimaxAI.makeRandomMove();
-      turnCounter += 1;
     }
     displayController.displayBoard();
   };
@@ -178,23 +182,26 @@ const gameController = (function () {
   };
 
   const checkForTie = (board) => {
-    turnCounter += 1;
-    if (turnCounter >= 9 && checkForWin(board) === false)  {
-      return true;
-    } else {
-      return false;
+    let tie = true;
+    for (const position of board) {
+      if (position === '' || (checkForWin(board) === tie)) {
+        tie = false;
+      }
     }
+    return tie;
   };
 
   const update = () => {
     if (gameSettings.getMode() === 'ai' &&  checkForWin(gameBoard.getBoard()) === false) {
-      minimaxAI.makeRandomMove();
-      turnCounter += 1;
+      minimaxAI.minimax(gameBoard.getBoard(), 0, gameController.getAiPlayer());
+      gameBoard.getBoard()[minimaxAI.getBestMove()] = gameController.getAiPlayer().getMark();
       [currentPlayer, nextPlayer] = [nextPlayer, currentPlayer];
     }
     
     displayController.stopRound();
     displayController.displayBoard();
+
+
 
     if (checkForWin(gameBoard.getBoard()) === true) {
       displayController.displayWinText();
@@ -208,11 +215,9 @@ const gameController = (function () {
     }
 
     [currentPlayer, nextPlayer] = [nextPlayer, currentPlayer];
-
   };
 
   const restartGame = () => {
-    turnCounter = 0;
     makePlayerRat();
   };
 
@@ -301,6 +306,7 @@ const gameSettings = (function() {
 })();
 
 const minimaxAI = (function() {
+  let choice;
 
   const makeRandomMove = () => {
     randomMove = Math.floor(Math.random() * gameBoard.getEmptyBoardIndex().length);
@@ -310,20 +316,89 @@ const minimaxAI = (function() {
 
   const getScore = (game, depth, player) => { 
     if (gameController.checkForWin(game) && 
-    (gameController.getAiPlayer.getSpecies() === player.getSpecies())) {
-      return 10 - depth;
-    } else if (gameController.checkForWin(game) && 
-    (gameController.getCurrentPlayer.getSpecies() === player.getSpecies())) {
+    (gameController.getAiPlayer().getSpecies() === player.getSpecies())) {
       return depth - 10;
+    } else if (gameController.checkForWin(game) && 
+    (gameController.getCurrentPlayer().getSpecies() === player.getSpecies())) {
+      return 10 - depth;
     } else {
       return 0;
     }
   };
+
+  const findMaxScoreIndex = (scores) => {
+    let i = 0;
+    let maxScore = -10;
+    let maxIndex = 0;
+    for (const score of scores) {
+      if (maxScore < score) {
+        maxScore = score;
+        maxIndex = i;
+      } 
+
+      i += 1;
+    }
+    return maxIndex;
+  };
+
+  const findMinScoreIndex = (scores) => {
+    let i = 0;
+    let minScore = 10;
+    let minIndex = 0;
+    for (const score of scores) {
+      if (minScore > score) {
+        minScore = score;
+        minIndex = i;
+      }
+      i += 1;
+    }
+    return minIndex;
+  };
+
+  const findBestMove = (moves, scores, player) => {
+    if (player.getMark() === gameController.getAiPlayer().getMark()) {
+      maxMoveIndex = findMaxScoreIndex(scores);
+      choice = moves[maxMoveIndex];
+      return scores[maxMoveIndex];
+    } else {
+      minMoveIndex = findMinScoreIndex(scores); 
+      choice = moves[minMoveIndex];
+      return scores[minMoveIndex];
+    }
+  };
+
+  const minimax = (game, depth, player) => {
+    if (gameController.checkForWin(game) || gameController.checkForTie(game)) {
+      return getScore(game, depth, player);
+    }
+    depth += 1;
+    let scores = [];
+    let moves = [];
+
+    for (const move of gameBoard.getEmptyBoardIndex()) {
+      let possibleGame = gameBoard.getNewBoard(game, move, player.getMark());
+      if (player.getMark() === gameController.getAiPlayer().getMark()) {
+        scores.push(minimax(possibleGame, depth, gameController.getCurrentPlayer()));
+      } else {
+        scores.push(minimax(possibleGame, depth, gameController.getAiPlayer()));
+      }
+      moves.push(move);
+      possibleGame = gameBoard.getNewBoard(game, move,'');
+    }
+    return findBestMove(moves, scores, player);
+  };
+
+  const getBestMove = () => choice;
   
   return {
     makeRandomMove,
-    getScore
-  };
+    getScore,
+    findMaxScoreIndex,
+    findMinScoreIndex,
+    findBestMove,
+    minimax,
+    getBestMove
+    };
 })();
 
 
@@ -337,4 +412,4 @@ function createPlayer(mark, species) {
   };
 };
 
- gameSettings.setButtons();
+gameSettings.setButtons();

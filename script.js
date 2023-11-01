@@ -119,7 +119,7 @@ const gameController = (function () {
   const startGame = () => {
     if (getCurrentPlayer().getSpecies() === 'Cat') {
       minimaxAI.makeRandomMove();
-      gameBoard.getBoard()[minimaxAI.getMove] = gameController.getAiPlayer().getMark();
+      gameBoard.getBoard()[minimaxAI.getMove()] = gameController.getAiPlayer().getMark();
     }
     displayController.displayBoard();
   };
@@ -294,6 +294,8 @@ const gameSettings = (function() {
   const getMode = () => mode;
 
   const changeDifficulty = () => {
+    // loops between difficulties
+    // changes chance of the choice to be smart instead for random
     switch(difficulty) {
       case 25:
         difficulty = 50;

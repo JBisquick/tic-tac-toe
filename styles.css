@@ -71,10 +71,32 @@ button {
   border: 1px solid var(--black);
 }
 
+.game-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10vh;
+}
+
+.game {
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  width: 100vw;
+}
+
+.profile-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
 .board {
   display: grid;
-  grid-template-columns: 50px 50px 50px;
-  grid-template-rows: 50px 50px 50px;
+  grid-template-columns: 100px 100px 100px;
+  grid-template-rows: 100px 100px 100px;
+  gap: 4px;
+  background-color: var(--black);
 }
 
 .board-cell {
@@ -85,7 +107,12 @@ button {
 	font: inherit;
 	cursor: pointer;
 	outline: inherit;
-  border: 1px solid var(--black);
+  background-color: var(--pink);
+}
+
+.game-container img {
+  width: 150px;
+  height: 150px;
 }
 
 .settings-button {
@@ -107,6 +134,10 @@ button {
 .button-container {
   display: flex;
   gap: 5vw;
+}
+
+.game-container div {
+  font-size: 2rem;
 }
 
 .button-container .start-button {
